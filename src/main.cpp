@@ -41,27 +41,6 @@ int cg_sum_loop_count_profile = 0;
 int iTimeStep_gloval = 0; // 控制 CG 内部 printf 的开关
 
 // ==========================================
-// 3. 链接器占位符 (Linker Placeholders)
-// ==========================================
-// 为了满足 extern_gloval_variables.h 的声明，防止链接错误。
-// 如果确认 math_func.cpp 中没有使用它们，可以删除。
-FLOAT Re_forNumberDensity, Re2_forNumberDensity; 
-FLOAT Re_forGradient,      Re2_forGradient; 
-FLOAT Re_forLaplacian,     Re2_forLaplacian;
-FLOAT N0_forNumberDensity, N0_forGradient, N0_forLaplacian;
-FLOAT Lambda, collisionDistance, collisionDistance2, FluidDensity;
-FLOAT *Acceleration, *MinimumPressure, *Position, *Velocity, 
-      *NumberDensity, *VelocityAfterCollision;
-int *normalELLCol_diagonalIndex;
-int *Bucket_ParticleNum;
-int profile_sparse_mat_sum_non_zeros;
-int profile_sparse_rate_time_step;
-double profile_sparse_rate_sum;
-int ell_max_row_width_debug;
-double Time;
-int cg_iter_total;
-
-// ==========================================
 // 4. 内存管理
 // ==========================================
 void allocate_solver_memory(int N) {
@@ -90,8 +69,8 @@ void free_solver_memory() {
 // 5. 主函数
 // ==========================================
 int main() {
-    // 数据文件路径 (根据实际情况调整，例如 "../data/system_data")
-    std::string prefix = "../data/system_data"; 
+    // 数据文件路径
+    std::string prefix = "data/system_data"; 
 
     // --- A. 读取元数据 ---
     FILE* f_meta = fopen((prefix + "_meta.txt").c_str(), "r");

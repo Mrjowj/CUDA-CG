@@ -6,7 +6,6 @@
 #include "../include/math_func.h"
 
 #include <cmath>       // 替代 <math.h>，提供 std::abs, std::sqrt 等
-#include <immintrin.h> // 保留 AVX512 头文件
 
 // ==========================================
 // 稠密矩阵计算 (Dense Matrix Operations)
