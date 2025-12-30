@@ -1,0 +1,25 @@
+# Linux executables
+a.out
+*.out
+*.run
+
+bin/
+data/
+
+# build outputs
+build/
+out/
+*.o
+*.obj
+*.a
+*.so
+*.dll
+*.exe
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
