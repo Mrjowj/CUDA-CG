@@ -1,39 +1,50 @@
-#ifndef SPMV_CUDA_H
-#define SPMV_CUDA_H
+/**
+ * @file cg_cuda.h
+ * @brief Header for Full-GPU Conjugate Gradient Solver
+ */
+#ifndef CG_CUDA_H
+#define CG_CUDA_H
 
-#include "extern_gloval_variables.h" // 引入 FLOAT 定义
+#include "extern_gloval_variables.h"
 
-// 定义一个不透明的句柄类型，用于隐藏 GPU 内部状态
-typedef void* SpmvHandle;
+// 不透明句柄，隐藏 GPU 内部复杂的显存指针
+typedef void* CgCudaHandle;
 
 /**
- * @brief 初始化 SpMV 上下文
- * * 1. 分配 GPU 显存 (x, y, val, col)
- * 2. 将静态矩阵数据 (val, col) 从 CPU 传输到 GPU
- * 3. 预热 Kernel
- * * @param N           粒子数 (行数)
- * @param ell_width   ELL 宽度 (最大邻居数)
- * @param h_val_cm    列主序 (Column-Major) 的矩阵数值数组指针 (Host)
- * @param h_col_cm    列主序 (Column-Major) 的列索引数组指针 (Host)
- * @return SpmvHandle 返回上下文句柄，失败返回 NULL
+ * @brief 初始化全 GPU CG 求解器环境
+ * * 1. 分配所有需要的显存 (A, b, x, r, p, Ax, Ap, buffer)
+ * 2. 将矩阵 A (Col-Major) 和向量 b 传输到 GPU
+ * 3. 将解向量 x 初始化为 0
+ * * @param N           粒子数 (矩阵行数)
+ * @param ell_width   ELL 矩阵宽度
+ * @param h_val_cm    Host端 矩阵数值 (Column-Major)
+ * @param h_col_cm    Host端 矩阵索引 (Column-Major)
+ * @param h_b         Host端 右端项向量 b
+ * @return CgCudaHandle 上下文句柄
  */
-SpmvHandle spmv_init(int N, int ell_width, const FLOAT* h_val_cm, const int* h_col_cm);
+CgCudaHandle cg_cuda_init(int N, int ell_width, 
+                          const FLOAT* h_val_cm, 
+                          const int* h_col_cm, 
+                          const FLOAT* h_b);
 
 /**
- * @brief 执行 SpMV (y = A * x)
- * * 1. 将向量 x 从 Host 传到 Device
- * 2. 执行 Kernel
- * 3. 将结果 y 从 Device 传回 Host
- * * @param handle SpmvHandle 句柄
- * @param h_x    输入向量 x (Host 指针)
- * @param h_y    输出向量 y (Host 指针)
+ * @brief 执行 CG 求解 (Full GPU Resident Loop)
+ * * 数据流：
+ * - 初始：x, b, A 已经在显存中
+ * - 循环：所有迭代计算 (SpMV, Dot, AXPY) 均在 GPU 完成，
+ * CPU 仅负责 Kernel Launch 和读取标量 (alpha, beta, residual)
+ * - 结束：将最终解 x 传回 Host
+ * * @param handle 句柄
+ * @param h_x_out [输出] 存放最终解的 Host 数组
+ * @param max_iter 最大迭代次数
+ * @param tol      收敛容差
+ * @return int     实际迭代次数
  */
-void spmv_exec(SpmvHandle handle, const FLOAT* h_x, FLOAT* h_y);
+int cg_cuda_solve(CgCudaHandle handle, FLOAT* h_x_out, int max_iter, FLOAT tol);
 
 /**
- * @brief 释放 SpMV 上下文
- * * 释放所有相关的 GPU 显存并销毁句柄
+ * @brief 释放 GPU 资源
  */
-void spmv_free(SpmvHandle handle);
+void cg_cuda_free(CgCudaHandle handle);
 
-#endif // SPMV_CUDA_H
+#endif // CG_CUDA_H
