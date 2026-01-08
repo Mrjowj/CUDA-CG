@@ -51,7 +51,7 @@ struct CgContext {
 
     // --- GPU Memory (Full Residency) ---
     FLOAT* d_val = nullptr; // Matrix Value (Col-Major)
-    int* d_col = nullptr; // Matrix Index (Col-Major)
+    int*   d_col = nullptr; // Matrix Index (Col-Major)
     FLOAT* d_b   = nullptr; // RHS
     FLOAT* d_x   = nullptr; // Solution
     FLOAT* d_r   = nullptr; // Residual
@@ -104,6 +104,7 @@ __global__ void spmv_kernel(
             int idx = j * N + row; // Col-Major Access
             int c = col_idx[idx];
             if (c != ELL_NULL) {
+                // FMA here
                 sum += val[idx] * x[c];
             }
         }
@@ -135,7 +136,7 @@ __global__ void dot_kernel(
     sum = warp_reduce_sum(sum);
 
     // 2. Block Reduction (using Shared Memory)
-    // 一个 Block 最多 32 个 Warp，只需 32 个槽位
+    // 一个 Block 最多 32 个 Warp，只需 32 个槽位(Block Size 1024 / 32 = 32)
     static __shared__ T shared[32]; 
     int lane = tid % WARP_SIZE;
     int wid  = tid / WARP_SIZE;
